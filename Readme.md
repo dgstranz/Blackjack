@@ -46,11 +46,4 @@
  *          - Si el dealer tiene más puntos sin pasarse, gana el dealer.
  *          - Si ambos tienen el mismo valor, es un empate.
  *          - Si uno de los dos se pasa de 21, pierde automáticamente.
- * 
- * === AYUDA ===
- * crearBaraja(): genera las 52 cartas.
- * barajarMazo(String[] mazo): baraja el mazo.
- * repartirCarta(): devuelve la siguiente carta disponible en el mazo.
- * calcularValorMano(String[] mano, int numCartas): calcula el valor de una mano completa.
- * printMano(String[] mano, int numCartas): imprime las cartas de una mano por consola.
  */

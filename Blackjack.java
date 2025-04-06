@@ -1,3 +1,9 @@
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class Blackjack {
@@ -27,13 +33,36 @@ public class Blackjack {
             if (option.equals("N")) {
                 newGame();
             } else if (option.equals("I")) {
-                printInstructions();
+                try {
+                    printInstructions();
+                } catch (FileNotFoundException e) {
+                    System.err.println("Instrucciones no disponibles: " + e.getMessage());
+                } catch (IOException e) {
+                    System.err.println("Instrucciones no disponibles: " + e.getMessage());
+                }
             }
         } while (!option.equals("S"));
     }
 
-    public static void printInstructions() {
-        System.out.println("\n--- INSTRUCCIONES DEL JUEGO ---");
+    public static void printInstructions() throws IOException {
+        Path path = Paths.get("README.md");
+        String line;
+        BufferedReader reader = null;
+
+        try {
+            reader = Files.newBufferedReader(path);
+            while((line = reader.readLine()) != null) {
+                System.out.println(line.substring(
+                    Integer.min(line.length(), 3)
+                    ));
+            }
+
+            reader.close();
+        } catch (FileNotFoundException e) {
+            throw new FileNotFoundException("No se encontró el archivo especificado");
+        } catch (IOException e) {
+            throw new IOException("Error al leer el archivo: " + e.getMessage());
+        }
     }
     
     public static void newGame() {
@@ -166,9 +195,13 @@ public class Blackjack {
             playerBlackjack = true;
         }
 
+        /* Aunque el jugador se pase, el croupier sigue jugando.
+         * La lógica es que puede haber varios jugadores; el croupier
+         * puede seguir jugando contra los demás.
+         */
         System.out.println("\n¡Es el turno del croupier!\n");
 
-        // Turno del dealer: debe pedir cartas hasta alcanzar al menos 17
+        // Turno del croupier: debe pedir cartas hasta alcanzar al menos 17
         while(dealer.getScore() <= 16) {
             try {
                 dealer.drawCard(deck);
@@ -196,12 +229,9 @@ public class Blackjack {
         System.out.println("");
 
         if (playerBust) {
-            if (dealerBust) {
-                System.out.println("EMPATE: Tanto tú como el croupier os habéis pasado.");
-            } else {
-                System.out.println("HAS PERDIDO: Te has pasado. Pierdes " + bet + " €.");
-                player.lose(bet);
-            }
+            // Si el croupier también se pasa, es igual: el jugador pierde igualmente.
+            System.out.println("HAS PERDIDO: Te has pasado. Pierdes " + bet + " €.");
+            player.lose(bet);
         } else if (playerBlackjack) {
             if (dealerBlackjack) {
                 System.out.println("EMPATE: Tanto tú como el croupier habéis conseguido un blackjack.");
