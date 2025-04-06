@@ -52,9 +52,7 @@ public class Blackjack {
         try {
             reader = Files.newBufferedReader(path);
             while((line = reader.readLine()) != null) {
-                System.out.println(line.substring(
-                    Integer.min(line.length(), 3)
-                    ));
+                System.out.println(line);
             }
 
             reader.close();
