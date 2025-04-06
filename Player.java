@@ -21,11 +21,11 @@ public class Player {
         return credit;
     }
 
-    public void gain(int change) {
+    public void gain(double change) {
         credit += change;
     }
 
-    public void lose(int change) {
+    public void lose(double change) {
         credit -= change;
     }
 
@@ -43,7 +43,6 @@ public class Player {
             Card card = deck.removeCard();
             cards.add(card);
         } catch (IllegalStateException e) {
-            System.err.println("Error al tratar de robar una carta: " + e.getMessage());
             throw e;
         }
     }
@@ -53,23 +52,35 @@ public class Player {
             try {
                 drawCard(deck);
             } catch (IllegalStateException e) {
-                System.err.println("Error al tratar de robar cartas del mazo: " + e.getMessage());
                 throw e;
             }
         }
     }
 
-    public void showCards(boolean visible) {
+    /* Este método tiene dos modos:
+     * * visible == true: la mano es visible, se muestran todas las cartas
+     * * visible == false: la mano está oculta (salvo la primera carta)
+     */
+    public String getCards(boolean visible) {
         String output = new String();
 
         for (int i = 0; i < cards.size(); i++) {
             output += cards.get(i).toString(!visible && i > 0) + " ";
         }
 
-        System.out.println(output);
+        return output;
     }
 
-    public void showScore() {
+    public int getHandSize() {
+        return cards.size();
+    }
+
+    // Obtener la última carta robada
+    public String getLastCard() {
+        return cards.get(cards.size() - 1).toString(false);
+    }
+
+    public int getScore() {
         int score = 0;
         int aces = 0;
         Card card;
@@ -91,6 +102,10 @@ public class Player {
             score -= 10;
         }
 
-        System.out.println(score);
+        return score;
+    }
+
+    public void resetHand() {
+        cards = new ArrayList<Card>();
     }
 }

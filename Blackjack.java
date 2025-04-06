@@ -15,19 +15,25 @@ public class Blackjack {
 
         do {
             System.out.println("\n--- MENÚ PRINCIPAL ---");
-            System.out.println("[N]ueva partida   [S]alir");
+            System.out.println("[N]ueva partida   [I]nstrucciones   [S]alir");
             System.out.print("Selecciona una opción: ");
             option = sc.nextLine().trim().toUpperCase();
 
-            while (!option.matches("[NS]")) {
+            while (!option.matches("[NIS]")) {
                 System.out.println("Opción no válida. Inténtalo de nuevo: ");
                 option = sc.nextLine().trim().toUpperCase();
             }
 
             if (option.equals("N")) {
                 newGame();
+            } else if (option.equals("I")) {
+                printInstructions();
             }
         } while (!option.equals("S"));
+    }
+
+    public static void printInstructions() {
+        System.out.println("\n--- INSTRUCCIONES DEL JUEGO ---");
     }
     
     public static void newGame() {
@@ -67,6 +73,11 @@ public class Blackjack {
         final double DEFAULT_BET = 10.0;
         final double MIN_BET = 1.0;
         final double MAX_BET = 50.0;
+        String option;
+        boolean playerBlackjack = false;
+        boolean dealerBlackjack = false;
+        boolean playerBust = false;
+        boolean dealerBust = false;
 
         System.out.println("\n--- NUEVA RONDA ---");
 
@@ -109,33 +120,113 @@ public class Blackjack {
         Deck deck = new Deck();
         deck.shuffle();
 
-        System.out.println(deck.size());
-        System.out.println(deck.toString());
-
         // Repartir dos cartas al jugador y dos al croupier
-        player.drawCards(deck, 10);
-        player.showCards(true);
-        player.showScore();
-
+        player.drawCards(deck, 2);
         dealer.drawCards(deck, 2);
-        dealer.showCards(false);
 
         // Turno del jugador: ve mostrando mensajes para
         // poder controlar la dinámica y el avance de la partida
         // por la consola.
 
+        System.out.println("\n¡Es tu turno!\n");
 
+        do {
+            System.out.println("Tu mano: " + player.getCards(true) + "(" + player.getScore() + " puntos)");
+            System.out.println("Mano del croupier: " + dealer.getCards(false));
+            System.out.println();
+            System.out.println("[H]it (pedir carta)   [S]tand (plantarse)");
+            System.out.print("Selecciona una opción: ");
+            option = sc.nextLine().trim().toUpperCase();
 
-       // Muestra la primera carta y oculta la segunda
-    
+            while (!option.matches("[HS]")) {
+                System.out.println("Opción no válida. Inténtalo de nuevo: ");
+                option = sc.nextLine().trim().toUpperCase();
+            }
 
+            if (option.equals("H")) {
+                try {
+                    player.drawCard(deck);
+                    System.out.println("Has robado la carta " + player.getLastCard() + "\n");
+                } catch (IllegalStateException e) {
+                    System.err.println("Error al tratar de robar una carta: " + e.getMessage());
+                    break;
+                }
+            } else if (option.equals("S")) {
+                break;
+            }
+        } while (!option.equals("S") && player.getScore() <= 21);
+
+        System.out.println("Te has plantado.");
+
+        if (player.getScore() > 21) {
+            System.out.println("¡Te has pasado! Tienes " + player.getScore() + " puntos.");
+            playerBust = true;
+        } else if (player.getScore() == 21 && player.getHandSize() == 2) {
+            System.out.println("¡Enhorabuena! ¡Has conseguido un blackjack!");
+            playerBlackjack = true;
+        }
+
+        System.out.println("\n¡Es el turno del croupier!\n");
 
         // Turno del dealer: debe pedir cartas hasta alcanzar al menos 17
+        while(dealer.getScore() <= 16) {
+            try {
+                dealer.drawCard(deck);
+                System.out.println("El croupier ha robado la carta " + dealer.getLastCard());
+            } catch (IllegalStateException e) {
+                System.err.println("Error al tratar de robar una carta: " + e.getMessage());
+                break;
+            }
+        }
 
+        System.out.println("El croupier se ha plantado.");
 
-
+        if (dealer.getScore() > 21) {
+            System.out.println("¡El croupier se ha pasado! Tiene " + dealer.getScore() + " puntos.");
+            dealerBust = true;
+        } else if (dealer.getScore() == 21 && dealer.getHandSize() == 2) {
+            System.out.println("Vaya, el croupier ha conseguido un blackjack...");
+            dealerBlackjack = true;
+        }
 
         // Mostrar resultados finales
+        System.out.println("\nFin de la ronda");
+        System.out.println("Tu mano: " + player.getCards(true) + "(" + player.getScore() + " puntos)");
+        System.out.println("Mano del croupier: " + dealer.getCards(true) + "(" + dealer.getScore() + " puntos)");
+        System.out.println("");
 
+        if (playerBust) {
+            if (dealerBust) {
+                System.out.println("EMPATE: Tanto tú como el croupier os habéis pasado.");
+            } else {
+                System.out.println("HAS PERDIDO: Te has pasado. Pierdes " + bet + " €.");
+                player.lose(bet);
+            }
+        } else if (playerBlackjack) {
+            if (dealerBlackjack) {
+                System.out.println("EMPATE: Tanto tú como el croupier habéis conseguido un blackjack.");
+            } else {
+                System.out.println("HAS GANADO: Conseguiste un blackjack, que se paga 3 a 2. Ganas " + (1.5 * bet) + " €.");
+                player.gain(1.5 * bet);
+            }
+        } else if (dealerBust) {
+            System.out.println("HAS GANADO: El croupier se ha pasado. Ganas " + bet + " €.");
+            player.gain(bet);
+        } else if (dealerBlackjack) {
+            System.out.println("HAS PERDIDO: El croupier consiguió un blackjack. Pierdes " + bet + " €.");
+            player.lose(bet);
+        } else if (player.getScore() > dealer.getScore()) {
+            System.out.println("HAS GANADO: Tienes " + player.getScore() + " puntos, por " + dealer.getScore() + " del croupier. Ganas " + bet + " €.");
+            player.gain(bet);
+        } else if (player.getScore() < dealer.getScore()) {
+            System.out.println("HAS PERDIDO: Tienes " + player.getScore() + " puntos, por " + dealer.getScore() + " del croupier. Pierdes " + bet + " €.");
+            player.lose(bet);
+        } else {
+            System.out.println("EMPATE: Tienes " + player.getScore() + " puntos, por " + dealer.getScore() + " del croupier.");
+        }
+
+        // Reseteamos la mano del jugador y del croupier para la próxima ronda //
+        player.resetHand();
+        dealer.resetHand();
     }
 }
